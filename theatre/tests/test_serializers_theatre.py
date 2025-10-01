@@ -37,6 +37,10 @@ class TicketSerializerTest(TestCase):
 
 class PerformanceSerializerTest(TestCase):
     def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="test@example.com",
+            password="testpass123"
+        )
         self.play = Play.objects.create(title="Hamlet", description="Tragedy")
         self.hall = TheatreHall.objects.create(name="Main Hall", rows=2, seats_in_row=2)
         self.performance = Performance.objects.create(
@@ -46,12 +50,26 @@ class PerformanceSerializerTest(TestCase):
         )
 
     def test_performance_list_tickets_available(self):
-        Ticket.objects.create(row=1, seat=1, performance=self.performance)
+        reservation = Reservation.objects.create(user=self.user)
+
+        Ticket.objects.create(
+            row=1,
+            seat=1,
+            performance=self.performance,
+            reservation=reservation
+        )
         serializer = PerformanceListSerializer(self.performance)
         self.assertEqual(serializer.data["tickets_available"], 3)
 
     def test_performance_detail_taken_places(self):
-        Ticket.objects.create(row=1, seat=1, performance=self.performance)
+        reservation = Reservation.objects.create(user=self.user)
+
+        Ticket.objects.create(
+            row=1,
+            seat=1,
+            performance=self.performance,
+            reservation=reservation
+        )
         serializer = PerformanceDetailSerializer(self.performance)
         self.assertEqual(len(serializer.data["taken_places"]), 1)
 
@@ -82,7 +100,14 @@ class ReservationSerializerTest(TestCase):
         self.assertEqual(reservation.tickets.count(), 2)
 
     def test_reservation_fails_on_taken_seat(self):
-        Ticket.objects.create(row=1, seat=1, performance=self.performance)
+        reservation = Reservation.objects.create(user=self.user)
+
+        Ticket.objects.create(
+            row=1,
+            seat=1,
+            performance=self.performance,
+            reservation=reservation
+        )
         data = {"tickets": [{"row": 1, "seat": 1, "performance": self.performance.id}]}
         serializer = ReservationSerializer(data=data)
         with self.assertRaises(ValidationError):
@@ -90,6 +115,10 @@ class ReservationSerializerTest(TestCase):
 
     def test_reservation_list_serializer(self):
         reservation = Reservation.objects.create(user=self.user)
-        Ticket.objects.create(row=1, seat=1, performance=self.performance, reservation=reservation)
+        Ticket.objects.create(
+            row=1, seat=1,
+            performance=self.performance,
+            reservation=reservation
+        )
         serializer = ReservationListSerializer(reservation)
         self.assertEqual(len(serializer.data["tickets"]), 1)
