@@ -66,7 +66,7 @@ class PlayViewSet(viewsets.ModelViewSet):
             return PlayListSerializer
         if self.action == "retrieve":
             return PlayDetailSerializer
-        if self.action == "upload-image":
+        if self.action == "upload_image":
             return PlayImageSerializer
         return PlaySerializer
 
@@ -77,9 +77,11 @@ class PlayViewSet(viewsets.ModelViewSet):
         permission_classes=[],
     )
     def upload_image(self, request, pk=None):
-        """Endpoint for uploading image to specific movie"""
+        """Endpoint for uploading image to specific play"""
         movie = self.get_object()
-        serializer = self.get_serializer(movie, data=request.data)
+        serializer = self.get_serializer(
+            movie, data=request.data, partial=True
+        )
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

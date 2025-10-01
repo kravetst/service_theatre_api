@@ -11,7 +11,7 @@ from theatre.views import (
 
 app_name = "theatre"
 router = DefaultRouter()
-router.register("plays", PlayViewSet)
+router.register("plays", PlayViewSet, basename="play")
 router.register("actors", ActorViewSet)
 router.register("genres", GenreViewSet)
 router.register("theatre_halls", TheatreHallViewSet)
